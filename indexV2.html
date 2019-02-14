@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>踩地雷</title>
+    <script
+  src="https://code.jquery.com/jquery-3.3.1.min.js"
+  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+  crossorigin="anonymous"></script>
+  </head>
+<style>
+    #bigout{
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content:space-around;
+        align-content:stretch;
+        width: 40vw;height: auto;background-color: aqua;
+    }
+    .plane{
+        display: flex;
+        background-color: cornflowerblue;
+        width:30px;
+        height: 30px;
+        border: 2px solid white;
+    }
+    .plane span{display: none;}
+    .boom.clicked{
+        background-color: red;
+    }
+    .normals.clicked{
+        background-color: cadetblue;
+        border: 2px solid black;
+    }
+    .normals.clicked span{display: block;}
+</style>
+  <body>
+        <span>長&寬</span><input type="text" placeholder="8(最小5*5,最大16*16)" id="inv1">
+        <span>地雷</span><input type="text" placeholder="12(不可超過地板總數,最小1)" id="inv3">
+        <button onclick="CreateG()">建立</button>
+    
+     <div id="bigout">
+     </div>
+     
+<script>
+//CreatPlane(10,25);
+//var Planesnb=10;
+var Planesnb;
+function CreateG(){//---創建  數目的 地板(沒有給屬性)
+    var selector = document.getElementsByClassName('plane');   
+    var inv1=document.getElementById("inv1").value;
+    var inv3=document.getElementById("inv3").value;
+    //console.log(inv1);console.log(inv3);
+    var alls=inv1*inv1;
+    var widths=document.getElementsByTagName('body')[0].clientWidth*0.4;
+  // console.log(inv3);
+  if(inv3>=1&&inv1*inv1>inv3&&inv1<=16&&inv1>=5){    
+      $('#bigout').empty();
+      Planesnb=inv1;
+      CreatPlane(inv1,inv3);
+  }else if(inv1<5){
+     alert("地板數目設定過小(最小5*5)");
+  }else if(inv1>16){
+    alert("地板數目設定過多(最大16*16)");
+  }else if(inv1*inv1<inv3){
+    alert("地雷數目 不可以超過總地板數目");  
+  }else if(inv3<1){
+    alert("地雷數目 至少要大於1");
+  }
+   
+}
+function CreatPlane(nbs,bombs){
+    var widths=document.getElementsByTagName('body')[0].clientWidth*0.4;//--大背景寬度
+    var wd=nbs*nbs;
+    var fwd=widths/nbs-4;
+    var arrayalls=[];
+    for(var i=0;i<wd;i++){
+        arrayalls.push(i);
+        $("#bigout").append(
+            '<div class="plane"><span></span></div>'
+        );
+        $(".plane").css({
+            width:fwd+"px",
+            height:fwd+"px",
+        });
+    }
+    arrayalls=arrayalls.sort(randomSort);
+    GiveBooms(arrayalls,bombs,nbs);
+    //console.log(arrayalls);
+}
+function GiveBooms(obj,nbs,longs){//---指定數目 的炸彈 到普通地板
+    var selector = document.getElementsByClassName('plane');
+    var Normors=[];
+    for(var i=0;i<obj.length;i++){//--給炸彈
+        if(i<nbs){
+            $(selector[obj[i]]).addClass("boom");
+        }
+        else{//--正常地版
+            Normors.push(obj[i]);
+            $(selector[obj[i]]).addClass("normals");
+        }
+    }
+    Normors=Normors.sort(function (a, b) {return a - b});//--重新排列  (小到大)
+    normalNB(Normors,longs);
+    //console.log(Normors);
+}
+function normalNB(normals,longs){//--給普通地版 數字(判斷炸彈數)
+    var selector = document.getElementsByClassName('plane');
+    console.log(normals);
+    var long2=longs*(longs-1);
+    var long3=longs*longs-1;
+    longs=parseInt(longs);
+    for(var i=0;i<normals.length;i++){
+            normals[i]=parseInt(normals[i]);
+            var nbs=0;
+            if(normals[i]==0){//--左上
+                if($(selector[normals[i]+1]).hasClass("boom")){nbs++;}
+                if($(selector[normals[i]+longs]).hasClass("boom")){nbs++;}
+                if($(selector[normals[i]+longs+1]).hasClass("boom")){nbs++;}
+            }
+            else if(normals[i]==longs-1){//--右上
+                if($(selector[normals[i]-1]).hasClass("boom")){nbs++;}
+                if($(selector[normals[i]+longs]).hasClass("boom")){nbs++;}
+                if($(selector[normals[i]+longs-1]).hasClass("boom")){nbs++;}
+            }
+            else if(normals[i]==long2){//--左下
+                if($(selector[normals[i]+1]).hasClass("boom")){nbs++;}
+                if($(selector[normals[i]-longs]).hasClass("boom")){nbs++;}
+                if($(selector[normals[i]-longs+1]).hasClass("boom")){nbs++;}
+            }
+            else if(normals[i]==long3){//--右下
+                if($(selector[normals[i]-1]).hasClass("boom")){nbs++;}
+                if($(selector[normals[i]-longs]).hasClass("boom")){nbs++;}
+                if($(selector[normals[i]-longs-1]).hasClass("boom")){nbs++;}
+            }
+            else if(normals[i]>0&&normals[i]<longs-1){//--第一橫排
+                if($(selector[normals[i]+1]).hasClass("boom")){nbs++;}
+                if($(selector[normals[i]-1]).hasClass("boom")){nbs++;}
+                if($(selector[normals[i]+longs]).hasClass("boom")){nbs++;}
+                if($(selector[normals[i]+longs-1]).hasClass("boom")){nbs++;}
+                if($(selector[normals[i]+longs+1]).hasClass("boom")){nbs++;}
+            }
+            else if(normals[i]>long2&&normals[i]<long3){//--最底下橫排
+                if($(selector[normals[i]+1]).hasClass("boom")){nbs++;}
+                if($(selector[normals[i]-1]).hasClass("boom")){nbs++;}
+                if($(selector[normals[i]-longs]).hasClass("boom")){nbs++;}
+                if($(selector[normals[i]-longs-1]).hasClass("boom")){nbs++;}
+                if($(selector[normals[i]-longs+1]).hasClass("boom")){nbs++;}
+            }
+            else if(normals[i]%longs==0){//--左直排
+                if($(selector[normals[i]+1]).hasClass("boom")){nbs++;}
+                if($(selector[normals[i]-longs]).hasClass("boom")){nbs++;}
+                if($(selector[normals[i]+longs]).hasClass("boom")){nbs++;}
+                if($(selector[normals[i]-longs+1]).hasClass("boom")){nbs++;}
+                if($(selector[normals[i]+longs+1]).hasClass("boom")){nbs++;}
+            }
+            else if(normals[i]%longs==longs-1){//--右值排
+                if($(selector[normals[i]-1]).hasClass("boom")){nbs++;}
+                if($(selector[normals[i]-longs]).hasClass("boom")){nbs++;}
+                if($(selector[normals[i]+longs]).hasClass("boom")){nbs++;}
+                if($(selector[normals[i]-longs-1]).hasClass("boom")){nbs++;}
+                if($(selector[normals[i]+longs-1]).hasClass("boom")){nbs++;}
+            }
+            else{//--中央 點位
+                if($(selector[normals[i]+1]).hasClass("boom")){nbs++;}
+                if($(selector[normals[i]-1]).hasClass("boom")){nbs++;}
+                if($(selector[normals[i]-longs]).hasClass("boom")){nbs++;}
+                if($(selector[normals[i]-longs+1]).hasClass("boom")){nbs++;}
+                if($(selector[normals[i]-longs-1]).hasClass("boom")){nbs++;}
+                if($(selector[normals[i]+longs]).hasClass("boom")){nbs++;}
+                if($(selector[normals[i]+longs+1]).hasClass("boom")){nbs++;}
+                if($(selector[normals[i]+longs-1]).hasClass("boom")){nbs++;}
+            }            
+            $(selector[normals[i]]).children("span").text(nbs);
+            //console.log(normals[i]);
+            //console.log(nbs);
+        //console.log(i);
+    }
+}
+
+function OpenPlane(count,longs){//--點擊後打開 地板
+    var selector = document.getElementsByClassName('plane');
+    longs=parseInt(longs);
+    count=parseInt(count);
+    var long2=longs*(longs-1);
+    var long3=longs*longs-1;
+    var nb1=count+1;
+    var nb2=count-1;
+    var nb3=count-longs;
+    var nb4=count+longs;
+    var nb5=count-longs-1;
+    var nb6=count-longs+1;
+    var nb7=count+longs-1;
+    var nb8=count+longs+1;
+    var ST1=$(selector[count+1]);
+    var ST2=$(selector[count-1]);
+    var ST3=$(selector[count-longs]);
+    var ST4=$(selector[count+longs]);
+    var ST5=$(selector[count-longs-1]);
+    var ST6=$(selector[count-longs+1]);
+    var ST7=$(selector[count+longs-1]);
+    var ST8=$(selector[count+longs+1]);
+    var again=[];
+    //if(ST1.children("span").html()!=null)
+                if(count==0){//--左上
+                    if(ST1.hasClass("clicked")==false&&ST1.hasClass("boom")==false){
+                        if(ST1.children("span").html()=="0")again.push(nb1);
+                        ST1.addClass("clicked");
+                    }
+                    if(ST4.hasClass("clicked")==false&&ST4.hasClass("boom")==false){
+                        if(ST4.children("span").html()=="0")again.push(nb4);
+                        ST4.addClass("clicked");
+                    }
+                    if(ST8.hasClass("clicked")==false&&ST8.hasClass("boom")==false&&$(selector[count]).children("span").html()=="0"){
+                        if(ST8.children("span").html()=="0")again.push(nb8);
+                        ST8.addClass("clicked");
+                    }   
+                }
+                else if(count==longs-1){//--右上
+                    if(ST2.hasClass("clicked")==false&&ST2.hasClass("boom")==false){
+                        if(ST2.children("span").html()=="0")again.push(nb2);
+                        ST2.addClass("clicked");
+                    }
+                    if(ST4.hasClass("clicked")==false&&ST4.hasClass("boom")==false){
+                        if(ST4.children("span").html()=="0")again.push(nb4);
+                        ST4.addClass("clicked");
+                    }
+                    if(ST7.hasClass("clicked")==false&&ST7.hasClass("boom")==false&&$(selector[count]).children("span").html()=="0"){
+                        if(ST7.children("span").html()=="0")again.push(nb7);
+                        ST7.addClass("clicked");
+                    }            
+                }
+                else if(count==long2){//--左下
+                    if(ST1.hasClass("clicked")==false&&ST1.hasClass("boom")==false){
+                        if(ST1.children("span").html()=="0")again.push(nb1);
+                        ST1.addClass("clicked");
+                    }
+                    if(ST3.hasClass("clicked")==false&&ST3.hasClass("boom")==false){
+                        if(ST3.children("span").html()=="0")again.push(nb3);
+                        ST3.addClass("clicked");
+                    }
+                    if(ST6.hasClass("clicked")==false&&ST6.hasClass("boom")==false&&$(selector[count]).children("span").html()=="0"){
+                        if(ST6.children("span").html()=="0")again.push(nb6);
+                        ST6.addClass("clicked");
+                    }       
+                }
+                else if(count==long3){//--右下
+                    if(ST2.hasClass("clicked")==false&&ST2.hasClass("boom")==false){
+                        if(ST2.children("span").html()=="0")again.push(nb2);
+                        ST2.addClass("clicked");
+                    }
+                    if(ST3.hasClass("clicked")==false&&ST3.hasClass("boom")==false){
+                        if(ST3.children("span").html()=="0")again.push(nb3);
+                        ST3.addClass("clicked");
+                    }
+                    if(ST5.hasClass("clicked")==false&&ST5.hasClass("boom")==false&&$(selector[count]).children("span").html()=="0"){
+                        if(ST5.children("span").html()=="0")again.push(nb5);
+                        ST5.addClass("clicked");
+                    }
+                }
+                else if(count>0&&count<longs-1){//--第一橫排
+                    if(ST1.hasClass("clicked")==false&&ST1.hasClass("boom")==false){
+                        if(ST1.children("span").html()=="0")again.push(nb1);
+                        ST1.addClass("clicked");
+                    }
+                    if(ST2.hasClass("clicked")==false&&ST2.hasClass("boom")==false){
+                        if(ST2.children("span").html()=="0")again.push(nb2);
+                        ST2.addClass("clicked");
+                    }
+                    if(ST4.hasClass("clicked")==false&&ST4.hasClass("boom")==false){
+                        if(ST4.children("span").html()=="0")again.push(nb4);
+                        ST4.addClass("clicked");
+                    }
+                    if(ST7.hasClass("clicked")==false&&ST7.hasClass("boom")==false&&$(selector[count]).children("span").html()=="0"){
+                        if(ST7.children("span").html()=="0")again.push(nb7);
+                        ST7.addClass("clicked");
+                    }
+                    if(ST8.hasClass("clicked")==false&&ST8.hasClass("boom")==false&&$(selector[count]).children("span").html()=="0"){
+                        if(ST8.children("span").html()=="0")again.push(nb8);
+                        ST8.addClass("clicked");
+                    }   
+                }
+                else if(count>long2&&count<long3){//--最底下橫排
+                    if(ST1.hasClass("clicked")==false&&ST1.hasClass("boom")==false){
+                        if(ST1.children("span").html()=="0")again.push(nb1);
+                        ST1.addClass("clicked");
+                    }
+                    if(ST2.hasClass("clicked")==false&&ST2.hasClass("boom")==false){
+                        if(ST2.children("span").html()=="0")again.push(nb2);
+                        ST2.addClass("clicked");
+                    }
+                    if(ST3.hasClass("clicked")==false&&ST3.hasClass("boom")==false){
+                        if(ST3.children("span").html()=="0")again.push(nb3);
+                        ST3.addClass("clicked");
+                    }
+                    if(ST5.hasClass("clicked")==false&&ST5.hasClass("boom")==false&&$(selector[count]).children("span").html()=="0"){
+                        if(ST5.children("span").html()=="0")again.push(nb5);
+                        ST5.addClass("clicked");
+                    }
+                    if(ST6.hasClass("clicked")==false&&ST6.hasClass("boom")==false&&$(selector[count]).children("span").html()=="0"){
+                        if(ST6.children("span").html()=="0")again.push(nb6);
+                        ST6.addClass("clicked");
+                    }
+                }
+                else if(count%longs==0){//--左直排
+                    if(ST1.hasClass("clicked")==false&&ST1.hasClass("boom")==false){
+                        if(ST1.children("span").html()=="0")again.push(nb1);
+                        ST1.addClass("clicked");
+                    }
+                    if(ST3.hasClass("clicked")==false&&ST3.hasClass("boom")==false){
+                        if(ST3.children("span").html()=="0")again.push(nb3);
+                        ST3.addClass("clicked");
+                    }
+                    if(ST4.hasClass("clicked")==false&&ST4.hasClass("boom")==false){
+                        if(ST4.children("span").html()=="0")again.push(nb4);
+                        ST4.addClass("clicked");
+                    }
+                    if(ST6.hasClass("clicked")==false&&ST6.hasClass("boom")==false&&$(selector[count]).children("span").html()=="0"){
+                        if(ST6.children("span").html()=="0")again.push(nb6);
+                        ST6.addClass("clicked");
+                    }
+                    if(ST8.hasClass("clicked")==false&&ST8.hasClass("boom")==false&&$(selector[count]).children("span").html()=="0"){
+                        if(ST8.children("span").html()=="0")again.push(nb8);
+                        ST8.addClass("clicked");
+                    }
+                }
+                else if(count%longs==longs-1){//--右值排
+                    if(ST2.hasClass("clicked")==false&&ST2.hasClass("boom")==false){
+                        if(ST2.children("span").html()=="0")again.push(nb2);
+                        ST2.addClass("clicked");
+                    }
+                    if(ST3.hasClass("clicked")==false&&ST3.hasClass("boom")==false){
+                        if(ST3.children("span").html()=="0")again.push(nb3);
+                        ST3.addClass("clicked");
+                    }
+                    if(ST4.hasClass("clicked")==false&&ST4.hasClass("boom")==false){
+                        if(ST4.children("span").html()=="0")again.push(nb4);
+                        ST4.addClass("clicked");
+                    }
+                    if(ST5.hasClass("clicked")==false&&ST5.hasClass("boom")==false&&$(selector[count]).children("span").html()=="0"){
+                        if(ST5.children("span").html()=="0")again.push(nb5);
+                        ST5.addClass("clicked");
+                    }
+                    if(ST7.hasClass("clicked")==false&&ST7.hasClass("boom")==false&&$(selector[count]).children("span").html()=="0"){
+                        if(ST7.children("span").html()=="0")again.push(nb7);
+                        ST7.addClass("clicked");
+                    }
+                }
+                else{//--中央 點位
+                    if(ST1.hasClass("clicked")==false&&ST1.hasClass("boom")==false){
+                        if(ST1.children("span").html()=="0")again.push(nb1);
+                        ST1.addClass("clicked");
+                    }
+                    if(ST2.hasClass("clicked")==false&&ST2.hasClass("boom")==false){
+                        if(ST2.children("span").html()=="0")again.push(nb2);
+                        ST2.addClass("clicked");
+                    }
+                    if(ST3.hasClass("clicked")==false&&ST3.hasClass("boom")==false){
+                        if(ST3.children("span").html()=="0")again.push(nb3);
+                        ST3.addClass("clicked");
+                    }
+                    if(ST4.hasClass("clicked")==false&&ST4.hasClass("boom")==false){
+                        if(ST4.children("span").html()=="0")again.push(nb4);
+                        ST4.addClass("clicked");
+                    }
+                    if(ST5.hasClass("clicked")==false&&ST5.hasClass("boom")==false&&$(selector[count]).children("span").html()=="0"){
+                        if(ST5.children("span").html()=="0")again.push(nb5);
+                        ST5.addClass("clicked");
+                    }
+                    if(ST6.hasClass("clicked")==false&&ST6.hasClass("boom")==false&&$(selector[count]).children("span").html()=="0"){
+                        if(ST6.children("span").html()=="0")again.push(nb6);
+                        ST6.addClass("clicked");
+                    }
+                    if(ST7.hasClass("clicked")==false&&ST7.hasClass("boom")==false&&$(selector[count]).children("span").html()=="0"){
+                        if(ST7.children("span").html()=="0")again.push(nb7);
+                        ST7.addClass("clicked");
+                    }
+                    if(ST8.hasClass("clicked")==false&&ST8.hasClass("boom")==false&&$(selector[count]).children("span").html()=="0"){
+                        if(ST8.children("span").html()=="0")again.push(nb8);
+                        ST8.addClass("clicked");
+                    }
+                }
+            //console.log(again);
+            if(again.length>0){
+                for(var i=0;i<again.length;i++){
+                    OpenPlane(again[i],longs);
+                }
+            }
+}
+function randomSort(a, b) {return Math.random() > 0.5 ? -1 : 1;}//--隨機 給直(用來亂數)
+
+$(function(){
+    $(document).on("click",".plane",function(){
+        if($(this).hasClass("boom")==false&&$(this).hasClass("clicked")==false){
+            var index = $(".plane").index( this );
+            OpenPlane(index,Planesnb);
+        }
+        $(this).addClass("clicked");
+    });
+    $(document).on("contextmenu",".plane",function(){
+        event.preventDefault();
+        if($(this).hasClass("clicked")==false){
+            $(this).toggleClass("findbooms");  
+        }
+    });
+});
+
+
+</script>
+  </body>
+</html>
